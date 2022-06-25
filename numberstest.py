@@ -112,6 +112,7 @@ def main():
     SAMPLE_SPREADSHEET_ID = '14VXHzb1HlLiq7cmiNw-hyCcRkTQWW75a6M96BGOU6xI'
     SAMPLE_RANGE_NAME = 'Test!A2:D'
     TOKEN = '5593989075:AAHfDU4Hi4d-M0B_QPwkpaKb69Kz4A_f9O0'
+    telegram_user_id = 789929585
     bot = telebot.TeleBot(TOKEN)
     archive = []
     first_data = get_sheets_data(SAMPLE_SPREADSHEET_ID, SAMPLE_RANGE_NAME)
@@ -120,7 +121,7 @@ def main():
     for one_data in first_data_updated:
         one_data.append(round(int(one_data[2])*dollar_to_ruble, 2))
     insert_update_database(first_data_updated)
-    archive = check_date(bot, archive, first_data_updated, 789929585)
+    archive = check_date(bot, archive, first_data_updated, telegram_user_id)
     while True:
         data_new = get_sheets_data(SAMPLE_SPREADSHEET_ID, SAMPLE_RANGE_NAME)
         if first_data != data_new and len(data_new) > 0:
@@ -131,7 +132,7 @@ def main():
             for one_data in first_data_updated:
                 one_data.append(round(int(one_data[2])*dollar_to_ruble, 2))
             insert_update_database(first_data_updated)
-            archive = check_date(bot, archive, first_data_updated, 789929585)
+            archive = check_date(bot, archive, first_data_updated, telegram_user_id)
         else:
             time.sleep(10)
 
