@@ -1,0 +1,82 @@
+version: '3'
+
+services:
+  postgres_db:
+    image: postgres:latest
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+    build:
+      dockerfile: dbDockerfile
+    ports:
+      - 5432:5432
+    volumes:
+      - postgresql-volume:/var/lib/postgresql/data
+    networks:
+      - django-network
+  python_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - postgres_db
+      - backend_app
+      - nginx
+    command:
+      python numberstest.py
+    networks:
+      - django-network
+  backend_app:
+    build:
+      context: .
+      dockerfile: /Numberstestbackend/Dockerfilebackend
+    command:
+      gunicorn --bind 0.0.0.0:8000 Numberstestbackend.wsgi --workers=3
+    volumes:
+      - backend-volume:/NumbersTestWorkBackend
+      - static_volume:/NumbersTestWorkBackend/static
+    expose:
+      - "8000"
+    networks:
+      - django-network
+  frontend_app:
+    build:
+      context: numberstestfrontend
+      dockerfile: Dockerfilefrontend
+    volumes:
+      - ./NumbersTestWork/numberstestfrontend:/app
+      - /app/node_modules
+    ports:
+      - 3000:3000
+    stdin_open: true
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    command: npm start
+    depends_on:
+      - nginx
+      - python_app
+      - backend_app
+  nginx:
+    build:
+      context: .
+      dockerfile: /Numberstestbackend/nginx/NginxDockerfile
+    restart: always
+    volumes:
+      - static_volume:/NumbersTestWorkBackend/static
+    ports:
+      - "80:80"
+    depends_on:
+      - backend_app
+    networks:
+      - django-network
+networks:
+  django-network:
+    name: django-network
+volumes:
+  postgresql-volume:
+    external: false
+  backend-volume:
+    external: false
+  static_volume:
+    external: false
